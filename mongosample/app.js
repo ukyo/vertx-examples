@@ -1,8 +1,10 @@
 var vertx = require('vertx.js');
 var template = require('lib/js/template.js');
 var staticfile = require('lib/js/staticfile.js');
-
+var RouteMatcherWrapper = require('lib/js/routematcherwrapper').RouteMatcher;
 var routeMatcher = new vertx.RouteMatcher();
+var rm = new RouteMatcherWrapper(routeMatcher);
+
 var eb = vertx.eventBus;
 
 var statics = {
@@ -53,20 +55,20 @@ function index (req) {
     });
 }
 
-routeMatcher.get('/', index);
+rm.get('/', index);
 
-routeMatcher.post('/', wrapPostHandler(function (req, params) {
+rm.post('/', function (req) {
     eb.send('test.persistor', {
         action: 'save',
         collection: 'messages',
         document: {
-            name: params.name,
-            text: params.text
+            name: req.params().name,
+            text: req.params().text
         }
     }, function (reply) {
         index(req);
     });
-}));
+});
 
 vertx.createHttpServer().requestHandler(routeMatcher).listen(8080);
 
