@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>traking</title>
+	<script type="text/javascript">
+		var ws = new WebSocket('ws://localhost:8080/');
+
+		ws.onmessage = function (e) {
+			console.log(e.data);
+		};
+
+		ws.onopen = function (e) {
+			console.log('open!');
+		};
+
+		ws.onclose = function (e) {
+			console.log('close!');
+		};
+
+		function send (data) {
+			if (ws.readyState === WebSocket.OPEN) {
+				ws.send(data);
+			} else {
+				console.log('not connected');
+			}
+		}
+
+		function sendEventData (e) {
+			var a = [];
+			for (var k in e) {
+				if (!e.hasOwnProperty(k)) continue;
+
+				switch (typeof e[k]) {
+					case 'number':
+					case 'boolean':
+					case 'string': a.push(k + ': ' + e[k]); break;
+				}
+			}
+			send(a.join(', '));
+		}
+
+		function on (action, callback) {
+			window.addEventListener(action, callback, false);
+		}
+		
+		on('mousemove', sendEventData);
+		on('click', sendEventData);
+		on('keypress', sendEventData);
+		on('mousewheel', sendEventData);
+	</script>
+</head>
+<body>
+
+</body>
+</html>
