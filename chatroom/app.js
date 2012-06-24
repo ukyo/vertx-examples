@@ -1,7 +1,6 @@
 var vertx = require('vertx');
 var template = require('lib/js/template');
 var staticfile = require('lib/js/staticfile');
-var Mustache = require('lib/js/mustache');
 
 var server = vertx.createHttpServer();
 var rm = new vertx.RouteMatcher();
@@ -10,17 +9,26 @@ var eb = vertx.eventBus;
 
 var wsdict = [];
 
+function sendNum () {
+	var i = 0;
+	for (var k in wsdict) ++i;
+	var num = JSON.stringify({num: i});
+	for (k in wsdict) wsdict[k].writeTextFrame(num);
+}
+
 server.websocketHandler(function (ws) {
 	var id = UUID.randomUUID().toString();
 	wsdict[id] = ws;
+
+	sendNum();
+
 	ws.dataHandler(function (buffer) {
 		var text = buffer.getString(0, buffer.length());
 		var message = JSON.parse(text);
 		console.log(text);
 
-		var tr = Mustache.render('<tr><td>{{name}}</td><td>{{text}}</td></tr>', message);
 		for (var k in wsdict) {
-			wsdict[k].writeTextFrame(tr);
+			wsdict[k].writeTextFrame(text);
 		}
 
 		eb.send('chatroom.persistor', {
@@ -33,6 +41,7 @@ server.websocketHandler(function (ws) {
 	ws.closedHandler(function () {
 		console.log('close [id:' + id + ']');
 		delete wsdict[id];
+		sendNum();
 	});
 });
 
