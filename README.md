@@ -2,4 +2,4 @@
 
 run example:
 
-    $path/to/vertx-examples/vertx run foo/bar.js
+    ./run_server.sh foo_directory
