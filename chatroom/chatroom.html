@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='UTF-8'>
+	<title>chatroom</title>
+	<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+	<style type="text/css">
+		#messages {
+			overflow: auto;
+			height: 400px;
+			margin: 10px;
+		}
+	</style>
+	<script type="text/javascript" src="/js/jquery.js"></script>
+	<script type="text/javascript">
+		$(function () {
+			var ws = new WebSocket('ws://localhost:8080/'),
+				$name = $('#input-name'),
+				$text = $('#input-text'),
+				$btn = $('button'),
+				$table = $('table');
+
+			ws.onmessage = function (e) {
+				$table.prepend(e.data);
+			};
+
+			ws.onopen = function (e) {
+				console.log('open!');
+			};
+
+			ws.onclose = function (e) {
+				console.log('close!');
+			};
+
+			function send (e) {
+				if (ws.readyState === WebSocket.OPEN) {
+					ws.send(JSON.stringify({name: $name.val(), text: $text.val()}));
+					$text.val('').focus();
+				} else {
+					console.log('not connected');
+				}
+			}
+
+			$btn.click(function (e) {
+				send($name.val(), $text.val());
+				$text.val('');
+				$text.focus();
+			});
+
+			$text.keypress(function (e) {
+				if (e.which === 13) {
+					send(e);
+				}
+			})
+		});
+	</script>
+</head>
+<body>
+	<header><h1>chatroom</h1></header>
+	<section id="messages">
+		<table class="table table-striped table-bordered table-condensed">
+			{{#messages}}
+			<tr><td>{{name}}</td><td>{{text}}</td></tr>
+			{{/messages}}
+		</table>
+	</section>
+	<section class="form-inline">
+		<label for="input-name">name</label>: <input type="text" id="input-name">
+		<label for="input-text">text</label>: <input type="text" id="input-text">
+		<button class="btn">submit</button>
+	</section>
+</body>
+</html>
